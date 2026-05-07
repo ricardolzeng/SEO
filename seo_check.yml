@@ -1,0 +1,37 @@
+name: Amazon SEO Daily Monitor
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # UTC 2:00 = 北京时间 10:00
+  workflow_dispatch: # 允许手动点击运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run SEO Monitor
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }} # 需要在 GitHub Repo Settings -> Secrets 中添加
+        run: python SEO_Monitor.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "SEO-Bot"
+          git config --global user.email "bot@github.com"
+          git add amazon_seo_history.xlsx
+          git commit -m "Auto-update SEO rankings: $(date +'%Y-%m-%d')" || exit 0
+          git push
